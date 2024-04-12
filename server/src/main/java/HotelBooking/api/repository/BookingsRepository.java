@@ -4,6 +4,7 @@ import HotelBooking.api.repository.entity.Booking;
 import HotelBooking.api.repository.entity.Room;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +19,7 @@ public interface BookingsRepository
 
     Booking findBookingById(Long bookingId);
 
+    @Modifying
     @Query("UPDATE Booking b SET b.status = :status WHERE b.paymentIntentId = :paymentIntentId")
     Optional<Integer> updateStatusByPaymentIntentId(String paymentIntentId, String status);
 }

@@ -23,6 +23,11 @@ public class BookingsController {
         this.bookingsService = bookingsService;
     }
 
+    @GetMapping(path="/success")
+    public String success(){
+        return "success";
+    }
+
     @GetMapping(path = "/{bookingId}")
     public ResponseEntity<Booking> getBookingDetails(@PathVariable("bookingId") String bookingId){
         Booking booking = bookingsService.getBookingDetails(bookingId);

@@ -58,7 +58,8 @@ public class BookingsService {
         }
 
         float price = calculatePrice(startDate, endDate, roomType, noRooms);
-        String paymentIntentId = initiatePayment((long) (price*100), "usd");
+        String clientSecret = initiatePayment((long) (price*100), "usd");
+        String paymentIntentId = stripeService.extractPaymentIntentId(clientSecret);
         Booking booking = new Booking(paymentIntentId, roomType, noRooms, "BOOKED", startDate, endDate, price);
         bookingsRepository.save(booking);
         roomsRepository.updateAvailableRooms(startDate, endDate, roomType, noRooms);

@@ -1,6 +1,9 @@
 package HotelBooking.api.controller;
 
 import HotelBooking.api.service.BookingsService;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
@@ -9,13 +12,18 @@ import com.stripe.model.Event;
 import com.stripe.model.StripeObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+
+
+import com.google.gson.Gson;
+
+
+import java.util.Optional;
 
 @RestController
 public class StripeWebhookController {
@@ -33,7 +41,7 @@ public class StripeWebhookController {
             Event event = Webhook.constructEvent(payload, sigHeader, STRIPE_WEBHOOK_SECRET);
 
             switch(event.getType()){
-                case "payment_intent.succeeded" : {
+                case "charge.succeeded" : {
                     return handlePaymentSucceededEvent(event);
                 }
                 case "payment_intent.payment_failed" : {
@@ -49,15 +57,19 @@ public class StripeWebhookController {
     }
 
     private ResponseEntity<String> handlePaymentSucceededEvent(Event event){
+
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-        StripeObject stripeObject = null;
-        if(dataObjectDeserializer.getObject().isPresent()){
-            stripeObject = dataObjectDeserializer.getObject().get();
+        String paymentIntentId = null;
+        if (dataObjectDeserializer.getObject().isPresent()) {
+            StripeObject stripeObject = dataObjectDeserializer.getObject().get();
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(stripeObject.toJson(), JsonObject.class);
+            paymentIntentId = jsonObject.get("payment_intent").getAsString();
+            System.out.println("ID : " + paymentIntentId);
+        } else {
+            System.out.println("Failed");
         }
 
-        PaymentIntent paymentIntent = (PaymentIntent) stripeObject;
-        assert paymentIntent != null;
-        String paymentIntentId = paymentIntent.getId();
 
         bookingsService.updateBookingStatus(paymentIntentId, "PAID");
 
