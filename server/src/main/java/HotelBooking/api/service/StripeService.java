@@ -3,8 +3,11 @@ package HotelBooking.api.service;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.PaymentIntentCancelParams;
 import com.stripe.param.PaymentIntentConfirmParams;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ public class StripeService {
                     .setCurrency(currency)
                     .setPaymentMethod("pm_card_visa")
                     .build());
+            System.out.println(intent.getClientSecret());
             return intent.getClientSecret();
         } catch (StripeException e){
             e.printStackTrace();
@@ -40,8 +44,20 @@ public class StripeService {
 
             PaymentIntent paymentIntent = resource.confirm(params);
             // System.out.println(paymentIntent.toJson());
-        } catch (StripeException e){
-            System.out.println("Error: " + e.getMessage());
+        } catch (StripeException e) {
+            System.out.println("Faild to confirm Payment Intent: " + e.getMessage());
+        }
+    }
+
+    public void cancelPaymentIntent(String paymentIntentId) {
+        Stripe.apiKey = apiKey;
+        try {
+            PaymentIntent resource = PaymentIntent.retrieve(paymentIntentId);
+            PaymentIntentCancelParams params = PaymentIntentCancelParams.builder().build();
+            PaymentIntent paymentIntent = resource.cancel(params);
+
+        } catch (StripeException e) {
+            System.out.println("Faild to cancel Payment Intent : " + e.getMessage());
         }
     }
 

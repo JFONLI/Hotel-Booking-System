@@ -5,25 +5,28 @@ import HotelBooking.api.repository.RoomsRepository;
 import HotelBooking.api.repository.entity.Booking;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class BookingsService {
     private final BookingsRepository bookingsRepository;
     private final RoomsRepository roomsRepository;
     private final StripeService stripeService;
-
+    private final BookingCancellationService bookingCancellationService;
 
     @Autowired
-    public BookingsService(StripeService stripeService, RoomsRepository roomsRepository, BookingsRepository bookingsRepository){
+    public BookingsService(StripeService stripeService, RoomsRepository roomsRepository, BookingsRepository bookingsRepository, BookingCancellationService bookingCancellationService){
         this.bookingsRepository = bookingsRepository;
         this.roomsRepository = roomsRepository;
         this.stripeService = stripeService;
+        this.bookingCancellationService = bookingCancellationService;
     }
 
     public Booking getBookingDetails(String bookingId){
@@ -60,9 +63,19 @@ public class BookingsService {
         float price = calculatePrice(startDate, endDate, roomType, noRooms);
         String clientSecret = initiatePayment((long) (price*100), "usd");
         String paymentIntentId = stripeService.extractPaymentIntentId(clientSecret);
-        Booking booking = new Booking(paymentIntentId, roomType, noRooms, "BOOKED", startDate, endDate, price);
+
+
+        try {
+            roomsRepository.updateAvailableRooms(startDate, endDate, roomType, noRooms);
+        } catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+
+
+        Booking booking = new Booking(paymentIntentId, roomType, noRooms, "BOOKED", startDate, endDate, price, LocalDateTime.now());
         bookingsRepository.save(booking);
-        roomsRepository.updateAvailableRooms(startDate, endDate, roomType, noRooms);
+
+        bookingCancellationService.scheduleBookingCancellation(paymentIntentId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Successfully make a Booking");
     }

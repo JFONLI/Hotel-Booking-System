@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
-@Transactional
 @Repository
 public interface RoomsRepository
     extends JpaRepository<Room, Long> {
@@ -32,9 +31,38 @@ public interface RoomsRepository
     @Query(value = "SELECT rates FROM available_rooms r WHERE r.date = :date AND r.room_type = :roomType", nativeQuery = true)
     Float findPriceByDateAndRoomType(LocalDate date, int roomType);
 
-    @Modifying
-    @Query(value = "UPDATE available_rooms SET no_rooms = no_rooms - :noRooms " +
-            "WHERE room_type = :roomType AND date BETWEEN :startDate AND :endDate", nativeQuery = true)
-    void updateAvailableRooms(LocalDate startDate, LocalDate endDate, int roomType, int noRooms);
+//    @Transactional
+//    @Modifying
+//    @Query(value = "UPDATE available_rooms SET no_rooms = no_rooms + :noRooms " +
+//            "WHERE room_type = :roomType AND date BETWEEN :startDate AND :endDate", nativeQuery = true)
+//    void releaseAvailableRooms(LocalDate startDate, LocalDate endDate, int roomType, int noRooms);
+
+    @Transactional
+    default void updateAvailableRooms(LocalDate startDate, LocalDate endDate, int roomType, int noRooms) {
+        List<Room> rooms = findByDateRange(startDate, endDate);
+        rooms.forEach(room -> {
+            if (room.getRoom_type() == roomType) {
+                int updatedNoRooms = room.getNo_rooms() - noRooms;
+                if (updatedNoRooms >= 0) {
+                    room.setNo_rooms(updatedNoRooms);
+                    save(room);
+                } else {
+                    throw new RuntimeException("No rooms available, total will comes to 0");
+                }
+            }
+        });
+    }
+
+    @Transactional
+    default void releaseAvailableRooms(LocalDate startDate, LocalDate endDate, int roomType, int noRooms) {
+        List<Room> rooms = findByDateRange(startDate, endDate);
+        rooms.forEach(room -> {
+            if (room.getRoom_type() == roomType) {
+                int updatedNoRooms = room.getNo_rooms() + noRooms;
+                room.setNo_rooms(updatedNoRooms);
+                save(room);
+            }
+        });
+    }
 
 }

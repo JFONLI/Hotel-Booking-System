@@ -7,7 +7,11 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -33,7 +37,14 @@ public class Booking {
     @Column(name = "price")
     private float price;
 
-    public Booking(String paymentIntentId, int roomType, int noRooms, String status, LocalDate startDate, LocalDate endDate, float price) {
+    @CreatedDate
+    @Column(name = "create_date")
+    private LocalDateTime createDate;
+    @UpdateTimestamp
+    @Column(name = "update_date")
+    private LocalDateTime updateDate;
+
+    public Booking(String paymentIntentId, int roomType, int noRooms, String status, LocalDate startDate, LocalDate endDate, float price, LocalDateTime createDate) {
         this.paymentIntentId = paymentIntentId;
         this.room_type = roomType;
         this.no_rooms = noRooms;
@@ -41,5 +52,6 @@ public class Booking {
         this.start_date = startDate;
         this.end_date = endDate;
         this.price = price;
+        this.createDate = createDate;
     }
 }
