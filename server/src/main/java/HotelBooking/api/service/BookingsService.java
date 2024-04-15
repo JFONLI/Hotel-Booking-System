@@ -5,8 +5,11 @@ import HotelBooking.api.repository.RoomsRepository;
 import HotelBooking.api.repository.entity.Booking;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.checkout.Session;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -46,7 +49,7 @@ public class BookingsService {
         bookingsRepository.updateStatusByPaymentIntentId(paymentIntentId, status);
     }
 
-    public ResponseEntity<String> makeABooking(LocalDate startDate, LocalDate endDate, int roomType, int noRooms) throws StripeException {
+    public ResponseEntity<String> makeABooking(HttpServletRequest request, LocalDate startDate, LocalDate endDate, int roomType, int noRooms) throws StripeException {
         // Check if the booking is available
         // If not
         // return response "No room available"
@@ -61,8 +64,10 @@ public class BookingsService {
         }
 
         float price = calculatePrice(startDate, endDate, roomType, noRooms);
-        String clientSecret = initiatePayment((long) (price*100), "usd");
-        String paymentIntentId = stripeService.extractPaymentIntentId(clientSecret);
+        Session session = stripeService.createSession(request, (long) (price*100), "usd", startDate, endDate, roomType, noRooms);
+        String sessionId = session.getId();
+        // String clientSecret = initiatePayment((long) (price*100), "usd");
+        // String paymentIntentId = stripeService.extractPaymentIntentId(clientSecret);
 
 
         try {
@@ -72,12 +77,15 @@ public class BookingsService {
         }
 
 
-        Booking booking = new Booking(paymentIntentId, roomType, noRooms, "BOOKED", startDate, endDate, price, LocalDateTime.now());
+        Booking booking = new Booking(sessionId, roomType, noRooms, "BOOKED", startDate, endDate, price, LocalDateTime.now());
         bookingsRepository.save(booking);
 
-        bookingCancellationService.scheduleBookingCancellation(paymentIntentId);
+        bookingCancellationService.scheduleBookingCancellation(sessionId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Successfully make a Booking");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Location", session.getUrl());
+        return new ResponseEntity<>(headers, HttpStatus.FOUND);
+        //return ResponseEntity.status(HttpStatus.CREATED).body("Successfully make a Booking");
     }
 
     public float calculatePrice(LocalDate startDate, LocalDate endDate, int roomType, int noRooms){

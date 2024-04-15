@@ -5,6 +5,7 @@ import HotelBooking.api.repository.entity.Booking;
 import HotelBooking.api.service.BookingsService;
 import HotelBooking.api.service.StripeService;
 import com.stripe.exception.StripeException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,11 @@ public class BookingsController {
         return "success";
     }
 
+    @GetMapping(path="/fail")
+    public String fail(){
+        return "fail";
+    }
+
     @GetMapping(path = "/{bookingId}")
     public ResponseEntity<Booking> getBookingDetails(@PathVariable("bookingId") String bookingId){
         Booking booking = bookingsService.getBookingDetails(bookingId);
@@ -35,8 +41,8 @@ public class BookingsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> makeABooking(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam int roomType, @RequestParam int noRooms) throws StripeException {
-        return bookingsService.makeABooking(startDate, endDate, roomType, noRooms);
+    public ResponseEntity<?> makeABooking(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam int roomType, @RequestParam int noRooms, HttpServletRequest request) throws StripeException {
+        return bookingsService.makeABooking(request, startDate, endDate, roomType, noRooms);
     }
 
     @GetMapping(path = "/stripe_payment")

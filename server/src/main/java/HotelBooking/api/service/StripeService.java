@@ -8,13 +8,64 @@ import com.stripe.param.PaymentIntentCancelParams;
 import com.stripe.param.PaymentIntentConfirmParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
+import com.stripe.param.checkout.SessionExpireParams;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 public class StripeService {
     @Value("${stripe.private.key}")
     private String apiKey;
+
+
+    public Session createSession(HttpServletRequest request, Long amount, String currency, LocalDate startDate, LocalDate endDate, int roomType, int noRooms){
+        Stripe.apiKey = apiKey;
+        try {
+            SessionCreateParams params =
+                    SessionCreateParams.builder()
+                            .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+                            .setSuccessUrl("http://" + request.getServerName() + ":8080/v1/bookings/success")
+                            .setCancelUrl("http://" + request.getServerName() + ":8080/v1/bookings/fail")
+                            .addLineItem(
+                                    SessionCreateParams.LineItem.builder()
+                                            .setPriceData(
+                                                    SessionCreateParams.LineItem.PriceData.builder()
+                                                            .setCurrency(currency)
+                                                            .setUnitAmount(amount)
+                                                            .setProductData(
+                                                                    SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                            .setName(generateProductName(startDate, endDate, roomType, noRooms))
+                                                                            .build()
+                                                            )
+                                                            .build()
+                                            )
+                                            .setQuantity(1L)
+                                            .build()
+                            )
+                            .setMode(SessionCreateParams.Mode.PAYMENT)
+                            .build();
+            Session session = Session.create(params);
+            System.out.println(session.getUrl());
+            return session;
+        } catch (StripeException e) {
+            System.out.println("Faild to create Sessoin : " + e.getMessage());
+            return null;
+        }
+    }
+
+    public void expireSession(String sessionId){
+        Stripe.apiKey = apiKey;
+        try {
+            Session resource = Session.retrieve(sessionId);
+            SessionExpireParams params = SessionExpireParams.builder().build();
+            Session session = resource.expire(params);
+        } catch (StripeException e) {
+            System.out.println("Faild to expire Session : " + e.getMessage());
+        }
+    }
 
     public String createPaymentIntent(Long amount, String currency) {
         Stripe.apiKey = apiKey;
@@ -75,6 +126,18 @@ public class StripeService {
         } else {
             return null;
         }
+    }
+
+    public static String generateProductName(LocalDate startDate, LocalDate endDate, int roomType, int noRooms) {
+        String roomTypeStr = "";
+        if (roomType == 1) {
+            roomTypeStr = "Standard Room";
+        } else if (roomType == 2) {
+            roomTypeStr = "Deluxe Room";
+        } else if (roomType == 3) {
+            roomTypeStr = "Suite";
+        }
+        return String.format("%s - %s to %s, %d rooms", roomTypeStr, startDate.toString(), endDate.toString(), noRooms);
     }
 
 }

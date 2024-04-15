@@ -41,8 +41,11 @@ public class StripeWebhookController {
             Event event = Webhook.constructEvent(payload, sigHeader, STRIPE_WEBHOOK_SECRET);
 
             switch(event.getType()){
-                case "charge.succeeded" : {
-                    return handlePaymentSucceededEvent(event);
+//                case "charge.succeeded" : {
+//                    return handlePaymentSucceededEvent(event);
+//                }
+                case "checkout.session.completed" : {
+                    return handleCompletedSession(event);
                 }
                 case "payment_intent.payment_failed" : {
                     handlePaymentFailedEvent(event);
@@ -54,6 +57,23 @@ public class StripeWebhookController {
         } catch (SignatureVerificationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Stripe Signature");
         }
+    }
+
+    private ResponseEntity<String> handleCompletedSession(Event event){
+        EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
+        String sessionId = null;
+        if (dataObjectDeserializer.getObject().isPresent()) {
+            StripeObject stripeObject = dataObjectDeserializer.getObject().get();
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(stripeObject.toJson(), JsonObject.class);
+            sessionId = jsonObject.get("id").getAsString();
+            System.out.println("ID : " + sessionId);
+        } else {
+            System.out.println("Failed to retrieve session id");
+        }
+
+        bookingsService.updateBookingStatus(sessionId, "PAID");
+        return ResponseEntity.status(HttpStatus.OK).body("Received and processed payment successfully");
     }
 
     private ResponseEntity<String> handlePaymentSucceededEvent(Event event){

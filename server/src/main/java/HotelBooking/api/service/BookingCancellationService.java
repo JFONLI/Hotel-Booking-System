@@ -31,7 +31,7 @@ public class BookingCancellationService {
         scheduledExecutorService.schedule(() -> {
             String status = bookingsRepository.getStatusByPaymentIntentId(bookingId);
             if(status.equals("BOOKED")){
-                stripeService.cancelPaymentIntent(bookingId);
+                stripeService.expireSession(bookingId);
                 bookingsRepository.updateStatusByPaymentIntentId(bookingId, "CANCELED");
                 Booking booking = bookingsRepository.getBookingByPaymentIntentId(bookingId);
                 roomsRepository.releaseAvailableRooms(booking.getStart_date(), booking.getEnd_date(), booking.getRoom_type(), booking.getNo_rooms());
