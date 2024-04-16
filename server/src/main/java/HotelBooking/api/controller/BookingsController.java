@@ -1,13 +1,10 @@
 package HotelBooking.api.controller;
 
-import HotelBooking.api.repository.RoomsRepository;
 import HotelBooking.api.repository.entity.Booking;
 import HotelBooking.api.service.BookingsService;
-import HotelBooking.api.service.StripeService;
 import com.stripe.exception.StripeException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,12 +14,8 @@ import java.time.LocalDate;
 @RequestMapping(path = "/v1/bookings")
 public class BookingsController {
 
-    private final BookingsService bookingsService;
-
     @Autowired
-    public BookingsController(BookingsService bookingsService){
-        this.bookingsService = bookingsService;
-    }
+    private BookingsService bookingsService;
 
     @GetMapping(path="/success")
     public String success(){
@@ -45,15 +38,15 @@ public class BookingsController {
         return bookingsService.makeABooking(request, startDate, endDate, roomType, noRooms);
     }
 
-    @GetMapping(path = "/stripe_payment")
-    public ResponseEntity<?> stripe_payment(@RequestParam Long amount, @RequestParam String currency){
-        try {
-            String clientSecret = bookingsService.initiatePayment(amount, currency);
-            return ResponseEntity.ok(clientSecret);
-        } catch (StripeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
-        }
-    }
+//    @GetMapping(path = "/stripe_payment")
+//    public ResponseEntity<?> stripe_payment(@RequestParam Long amount, @RequestParam String currency){
+//        try {
+//            String clientSecret = bookingsService.initiatePayment(amount, currency);
+//            return ResponseEntity.ok(clientSecret);
+//        } catch (StripeException e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing payment.");
+//        }
+//    }
 
 }

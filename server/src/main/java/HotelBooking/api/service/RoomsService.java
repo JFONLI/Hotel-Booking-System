@@ -16,7 +16,7 @@ public class RoomsService {
     public RoomsService(RoomsRepository roomsRepository){
         this.roomsRepository = roomsRepository;
     }
-    public List<Room> getAllData(LocalDate start_date, LocalDate end_date) {
+    public List<Room> getAvailableRooms(LocalDate start_date, LocalDate end_date) {
         return roomsRepository.findByDateRange(start_date, end_date);
     }
 }

@@ -1,12 +1,9 @@
 package HotelBooking.api.controller;
 
 import HotelBooking.api.service.BookingsService;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.EventDataObjectDeserializer;
-import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 import com.stripe.model.Event;
 import com.stripe.model.StripeObject;
@@ -21,9 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 import com.google.gson.Gson;
-
-
-import java.util.Optional;
 
 @RestController
 public class StripeWebhookController {

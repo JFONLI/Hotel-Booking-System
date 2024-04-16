@@ -51,7 +51,7 @@ public class StripeService {
             System.out.println(session.getUrl());
             return session;
         } catch (StripeException e) {
-            System.out.println("Faild to create Sessoin : " + e.getMessage());
+            System.out.println("Failed to create Session : " + e.getMessage());
             return null;
         }
     }
@@ -63,7 +63,7 @@ public class StripeService {
             SessionExpireParams params = SessionExpireParams.builder().build();
             Session session = resource.expire(params);
         } catch (StripeException e) {
-            System.out.println("Faild to expire Session : " + e.getMessage());
+            System.out.println("Failed to expire Session : " + e.getMessage());
         }
     }
 
@@ -96,7 +96,7 @@ public class StripeService {
             PaymentIntent paymentIntent = resource.confirm(params);
             // System.out.println(paymentIntent.toJson());
         } catch (StripeException e) {
-            System.out.println("Faild to confirm Payment Intent: " + e.getMessage());
+            System.out.println("Failed to confirm Payment Intent: " + e.getMessage());
         }
     }
 

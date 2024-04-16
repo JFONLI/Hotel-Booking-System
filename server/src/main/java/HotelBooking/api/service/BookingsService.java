@@ -36,15 +36,6 @@ public class BookingsService {
         return bookingsRepository.findBookingById(Long.valueOf(bookingId));
     }
 
-    public String initiatePayment(Long amount, String currency) throws StripeException {
-        return stripeService.createPaymentIntent(amount, currency);
-    }
-
-    public String getPaymentStatus(String paymentIntentId) throws StripeException {
-        PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
-        return paymentIntent.getStatus();
-    }
-
     public void updateBookingStatus(String paymentIntentId, String status){
         bookingsRepository.updateStatusByPaymentIntentId(paymentIntentId, status);
     }
@@ -66,8 +57,6 @@ public class BookingsService {
         float price = calculatePrice(startDate, endDate, roomType, noRooms);
         Session session = stripeService.createSession(request, (long) (price*100), "usd", startDate, endDate, roomType, noRooms);
         String sessionId = session.getId();
-        // String clientSecret = initiatePayment((long) (price*100), "usd");
-        // String paymentIntentId = stripeService.extractPaymentIntentId(clientSecret);
 
 
         try {
