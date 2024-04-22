@@ -3,6 +3,7 @@ package HotelBooking.api.service;
 import HotelBooking.api.repository.BookingsRepository;
 import HotelBooking.api.repository.RoomsRepository;
 import HotelBooking.api.repository.entity.Booking;
+import HotelBooking.api.repository.entity.BookingStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -30,8 +31,8 @@ public class BookingCancellationService {
     public void scheduleBookingCancellation(String bookingId){
         // scheduledExecutorService = Executors.newScheduledThreadPool(1);
         scheduledExecutorService.schedule(() -> {
-            String status = bookingsRepository.getStatusByPaymentIntentId(bookingId);
-            if(status.equals("BOOKED")){
+            BookingStatus status = bookingsRepository.getStatusByPaymentIntentId(bookingId);
+            if(status.equals(BookingStatus.BOOKED)){
                 stripeService.expireSession(bookingId);
                 bookingsRepository.updateStatusByPaymentIntentId(bookingId, "CANCELED");
                 Booking booking = bookingsRepository.getBookingByPaymentIntentId(bookingId);

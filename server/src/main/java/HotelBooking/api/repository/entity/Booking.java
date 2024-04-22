@@ -28,8 +28,10 @@ public class Booking {
     private int room_type;
     @Column(name = "no_rooms")
     private int no_rooms;
-    @Column(name = "status")
-    private String status;
+//    @Column(name = "status")
+//    private String status;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
     @Column(name = "start_date")
     private LocalDate start_date;
     @Column(name = "end_date")
@@ -44,7 +46,7 @@ public class Booking {
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 
-    public Booking(String paymentIntentId, int roomType, int noRooms, String status, LocalDate startDate, LocalDate endDate, float price, LocalDateTime createDate) {
+    public Booking(String paymentIntentId, int roomType, int noRooms, BookingStatus status, LocalDate startDate, LocalDate endDate, float price, LocalDateTime createDate) {
         this.paymentIntentId = paymentIntentId;
         this.room_type = roomType;
         this.no_rooms = noRooms;
