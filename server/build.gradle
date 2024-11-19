@@ -34,10 +34,12 @@ dependencies {
 	//Payment Service
 	implementation group: 'com.stripe', name: 'stripe-java', version: '25.0.0'
 
+	//Eureka Server
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+
 //	implementation 'com.mysql:mysql-connector-j:8.0.32'
 //	implementation 'org.springframework.boot:spring-boot-starter-security'
 //	implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
-//	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
 //	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
